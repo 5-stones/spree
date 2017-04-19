@@ -267,14 +267,14 @@ module Spree
       self.user           = user
       self.email          = user.email if override_email
       self.created_by   ||= user
-      self.bill_address ||= user.bill_address
-      self.ship_address ||= user.ship_address
+      self.bill_address ||= user.bill_address.clone if user.bill_address
+      self.ship_address ||= user.ship_address.clone if user.ship_address
 
-      changes = slice(:user_id, :email, :created_by_id, :bill_address_id, :ship_address_id)
-
-      # immediately persist the changes we just made, but don't use save
-      # since we might have an invalid address associated
-      self.class.unscoped.where(id: self).update_all(changes)
+      # immediately persist the changes we just made, but skip validation
+      # because we might have an invalid address associated
+      if persisted?
+        save(validate: false)
+      end
     end
 
     def quantity_of(variant, options = {})
